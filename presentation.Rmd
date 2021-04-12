@@ -28,18 +28,20 @@ BibOptions(check.entries = FALSE,
            bib.style = "authoryear",
            cite.style = "authoryear",
            style = "markdown",
-           hyperlink = "to.bib",
+           hyperlink = FALSE,
            dashed = FALSE)
 bib <- ReadBib("./references/references.bib", check = FALSE)
 
 # Knitting
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, dev = "svg",
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+                      dev = "svglite",
                       fig.align = "center")
 
 # Plotting
-theme_ba <- theme_grey() +
+theme_ba <- theme_classic() +
   theme(plot.subtitle = element_markdown(),
-        plot.background = element_rect(fill = NA))
+        plot.background = element_rect(fill = "transparent"),
+        plot.margin = margin(5,5,5,5, "mm"))
 theme_set(theme_ba)
 
 # Data
@@ -47,11 +49,39 @@ pefr_wide <- read_csv("data/pefr_wide.csv")
 fix_points <- read_csv("data/fix_points.csv")
 ```
 
+```{r functions}
+blandize <- function(data, x, y) {
+  data %>%
+    transmute(magnitude = ({{x}} + {{y}}) / 2,
+              difference = {{x}} - {{y}})
+}
+
+blandstats <- function(bland_data,
+                       magnitude = magnitude,
+                       difference = difference,
+                       alpha = 0.05) {
+  with(bland_data,
+       lst(
+         bias = mean({{difference}}),
+         n = nrow(bland_data),
+         sd = sd({{difference}}),
+         se = sqrt(var({{difference}}) / n),
+         stat = qt(alpha / 2, df = n),
+         bias.upper = bias + se * stat,
+         bias.lower = bias - se * stat,
+         limit.upper = bias + 1.96 * sd,
+         limit.lower = bias - 1.96 * sd
+       ))
+}
+```
+
+
 # 1986?
 
 An old paper:
 
 ```{r results = "asis"}
+NoCite(bib, "Bland1986")
 print(bib[key = "Bland1986"])
 ```
 
@@ -83,10 +113,10 @@ class: middle, center, inverse
 - What about $r$, the standard (Pearson product-moment) correlation coefficient? 
 --
 
-- $r$ measures linear correlation between two variables, not agreement.
-
---
-- Two measurements can be perfectly linearly correlated, but not agree.
+  - $r$ measures linear correlation between two variables, not agreement.
+  - Two measurement methods can be perfectly linearly correlated, but not agree.
+  - Being correlated just means that two variables tend to go up or down together.
+  - Correlation $r$ is a function of the variability of the data: two variables that cover a wide range will have larger $r$ than similar variables which cover a small range, even if the degree of agreement is the same `r Citep(bib, "Altman1983")`.
 
 ---
 class: middle
@@ -111,14 +141,18 @@ eg1_1 <- ggplot(eg1_data, aes(x, y1)) +
   geom_point(alpha = 1/2) +
   coord_equal() +
   scale_x_continuous(breaks = c(0, 0.5, 1)) +
-  labs(subtitle = str_glue("_r_ = {eg1_1_stats$estimate}; _p_ = {format.pval(eg1_1_stats$p.value)}"))
+  labs(subtitle = str_glue("_r_ = {eg1_1_stats$estimate}; _p_ = {format.pval(eg1_1_stats$p.value)}"),
+       x = "Method 1",
+       y = "Method 2")
 
 eg1_2 <- ggplot(eg1_data, aes(x, y2)) +
   geom_point(alpha = 1/2) +
   coord_equal() +
   scale_x_continuous(breaks = c(0, 0.5, 1)) +
   scale_y_continuous(breaks = c(0, 0.5, 1, 1.5), limits = c(0, 1.5)) +
-  labs(subtitle = str_glue("_r_ = {eg1_2_stats$estimate}; _p_ = {format.pval(eg1_2_stats$p.value)}"))
+  labs(subtitle = str_glue("_r_ = {eg1_2_stats$estimate}; _p_ = {format.pval(eg1_2_stats$p.value)}"),
+       x = "Method 1",
+       y = "Method 2")
 
 eg1_1 + eg1_2
 ```
@@ -138,15 +172,15 @@ eg1_1 + line_equal + eg1_2 + line_equal
 
 # Not agreement
 
-## Even more pathological
+## Even worse:
 
-```{r fig.height=4}
+```{r fig.height = 4, width = 4}
 anscombe_long <- anscombe %>%
   pivot_longer(everything(),
                names_to = c("dimension", "set"),
                names_pattern = "([xy])([1234])") %>%
   pivot_wider(names_from = dimension, values_from = value) %>%
-  unnest()
+  unnest(cols = c(x, y))
 
 ggplot(anscombe_long, aes(x, y)) +
   geom_point() +
@@ -204,17 +238,100 @@ class: middle, center, inverse
 .pull-right[ 
 ```{r, fig.width = 4, fig.height = 4}
 ggplot(pefr_wide, aes(Wright1, Mini1)) +
-  geom_point(shape = "circle open", size = 3) +
+  geom_point() +
   scale_x_continuous(limits = c(0, 800)) +
   scale_y_continuous(limits = c(0, 800)) +
-  geom_abline(slope = 1) +
+  line_equal +
   coord_equal() +
   labs(x = "PEFR by large meter (L/min)",
        y = "PEFR by mini meter (L/min)")
 ```
-PEFR: Peak expiratory flow rate, a measure of lung function.
 
+PEFR: Peak expiratory flow rate, a measure of lung function.
 ]
+
+---
+
+# The _Limits of Agreement_ method
+
+
+0. Decide on a clinically acceptable threshold of agreement. Use clinical reasoning or published evidence. For example, you might consider methods in agreement if they are within
+  - 5mmHg for blood pressure
+  - 0.1 for blood pH
+  - 5% clotting activity for a FIX assay
+0. Visualise the magnitude of the measurements against the difference of the two methods.
+  - magnitude: estimate with the mean of the two methods
+  - difference: subtract one method from the other
+0. Find the bias: the average of the differences between methods.
+0. Find the limits of agreement: the 95% confidence interval of the bias.
+0. Critically appraise: 
+  - are there systematic differences between the methods?
+  - is the scale of the difference the same over the range of the measuremets?
+  - is the 95% limit of agreement within the predefined clinically meaninful threshold?
+
+---
+
+# Anatomy of a Bland-Altman plot
+
+```{r fig.height = 5}
+pefr_bland <- blandize(pefr_wide, Wright1, Mini1)
+pefr_stats <- blandstats(pefr_bland)
+
+anatomy0 <- ggplot(pefr_bland, aes(magnitude, difference)) +
+  labs(x = "Magnitude: Mean of Large and Mini (L/min)",
+       y = "Difference: Large - Mini (L/min)")
+
+anatomy0
+```
+
+---
+# Anatomy of a Bland-Altman plot
+
+```{r fig.height = 5}
+anatomy1 <- anatomy + 
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dotted")
+
+anatomy1
+```
+
+---
+
+# Anatomy of a Bland-Altman plot
+
+```{r fig.height = 5}
+anatomy2 <- anatomy1 +
+  geom_hline(yintercept = pefr_stats$bias, linetype = "solid", colour = "firebrick")
+
+anatomy2
+```
+
+---
+
+# Anatomy of a Bland-Altman plot
+
+```{r fig.height = 5}
+anatomy3 <- anatomy2 +
+  geom_hline(yintercept = c(pefr_stats$limit.upper, pefr_stats$limit.lower),
+             linetype = "dashed",
+             colour = "dodgerblue")
+  
+anatomy3
+```
+
+---
+# Anatomy of a Bland-Altman plot
+
+```{r fig.height = 5}
+anatomy4 <- anatomy3 +
+  annotate("ribbon",
+           x = c(-Inf, Inf),
+           ymin = pefr_stats$bias.lower,
+           ymax = pefr_stats$bias.upper,
+           fill = "firebrick",
+           alpha = 1/10)
+anatomy4
+```
 
 ---
 
