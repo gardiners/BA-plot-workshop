@@ -1,0 +1,226 @@
+---
+title: "Workshop: Limits of Agreement"
+subtitle: "Bland-Altman methods for assessing agreement of clinical measurements"
+author: "Sam Gardiner"
+institute: "Cell & Molecular Therapies, Royal Prince Alfred Hospital"
+date: "14 April 2021"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: [default, metropolis, metropolis-fonts]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+# Libraries
+options(htmltools.dir.version = FALSE)
+library(tidyverse)
+library(RefManageR)
+library(bibtex)
+library(ggtext)
+library(patchwork)
+
+# Bibliography
+BibOptions(check.entries = FALSE,
+           bib.style = "authoryear",
+           cite.style = "authoryear",
+           style = "markdown",
+           hyperlink = "to.bib",
+           dashed = FALSE)
+bib <- ReadBib("./references/references.bib", check = FALSE)
+
+# Knitting
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, dev = "svg",
+                      fig.align = "center")
+
+# Plotting
+theme_ba <- theme_grey() +
+  theme(plot.subtitle = element_markdown(),
+        plot.background = element_rect(fill = NA))
+theme_set(theme_ba)
+
+# Data
+pefr_wide <- read_csv("data/pefr_wide.csv")
+fix_points <- read_csv("data/fix_points.csv")
+```
+
+# 1986?
+
+An old paper:
+
+```{r results = "asis"}
+print(bib[key = "Bland1986"])
+```
+
+But an important paper:
+
+@TODO: Nature Medicine histogram (annotated)
+
+---
+class: middle, center, inverse
+
+# Agreement
+
+---
+
+# Agreement
+
+- It is often useful to compare two methods of measuring some clinical parameter. For example:
+  - One-stage vs. chromogenic FIX activity 
+  - Axillary vs tympanic temperature 
+  - NucleoCounter vs CELL-DYN cell counts
+- If the two methods "agree" (within clinically meaningful limits), you might be able to retire the more expensive, more laborious or otherwise less convenient method.
+
+---
+
+# Not agreement
+
+## Correlation
+
+- What about $r$, the standard (Pearson product-moment) correlation coefficient? 
+--
+
+- $r$ measures linear correlation between two variables, not agreement.
+
+--
+- Two measurements can be perfectly linearly correlated, but not agree.
+
+---
+class: middle
+
+# Not agreement
+
+## Perfectly correlated, but not in agreement
+
+```{r fig.height = 5}
+set.seed(1987)
+
+eg1_data <- tibble(
+  x = runif(50),
+  y1 = x * 1.5,
+  y2 = x + 0.25
+)
+
+eg1_1_stats <- with(eg1_data, cor.test(x, y1))
+eg1_2_stats <- with(eg1_data, cor.test(x, y2))
+
+eg1_1 <- ggplot(eg1_data, aes(x, y1)) +
+  geom_point(alpha = 1/2) +
+  coord_equal() +
+  scale_x_continuous(breaks = c(0, 0.5, 1)) +
+  labs(subtitle = str_glue("_r_ = {eg1_1_stats$estimate}; _p_ = {format.pval(eg1_1_stats$p.value)}"))
+
+eg1_2 <- ggplot(eg1_data, aes(x, y2)) +
+  geom_point(alpha = 1/2) +
+  coord_equal() +
+  scale_x_continuous(breaks = c(0, 0.5, 1)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1, 1.5), limits = c(0, 1.5)) +
+  labs(subtitle = str_glue("_r_ = {eg1_2_stats$estimate}; _p_ = {format.pval(eg1_2_stats$p.value)}"))
+
+eg1_1 + eg1_2
+```
+
+---
+
+# Not agreement
+
+## Perfectly correlated, but not in agreement
+
+```{r fig.height=5}
+line_equal <- geom_abline(slope = 1, linetype = "dashed", colour = "firebrick")
+eg1_1 + line_equal + eg1_2 + line_equal
+```
+
+---
+
+# Not agreement
+
+## Even more pathological
+
+```{r fig.height=4}
+anscombe_long <- anscombe %>%
+  pivot_longer(everything(),
+               names_to = c("dimension", "set"),
+               names_pattern = "([xy])([1234])") %>%
+  pivot_wider(names_from = dimension, values_from = value) %>%
+  unnest()
+
+ggplot(anscombe_long, aes(x, y)) +
+  geom_point() +
+  facet_wrap(vars(set), nrow = 2, ncol = 2) +
+  geom_smooth(method = "lm", alpha = 1/2, se = FALSE) +
+  annotate("text", x = 5, y = 12.5, label = "r = 0.816", hjust = 0) +
+  theme(strip.background = element_blank(), strip.text = element_blank()) +
+  scale_x_continuous(breaks = c(5, 10, 15, 20), limits = c(2.5, 20)) +
+  scale_y_continuous(breaks = c(0, 5, 10, 15), limits = c(2.5, 15)) +
+  coord_equal()
+```
+
+Data: `r Citet(bib, "Anscombe1973")`
+
+---
+
+# Not agreement
+
+## Calibration
+
+- Is measuring agreement the same as calibration?
+--
+
+  - Generally, **no**.
+  - Calibration compares a single method against a ground truth. 
+  - Agreement compares two imperfect methods (which are assumed to have measurement error) with each other.
+  - If the "ground truth" isn't particularly precise, agreement and calibration may be the same concept.
+
+---
+
+# Not quite agreement
+
+## Repeatability
+
+- Repeatability is a closely-related concept: if a measurement method agrees with itself over repeated measurements, it is _repeatable_.
+- The Bland-Altman _Limits of Agreement_ methods work well for assessing repeatability, as well.
+
+---
+class: middle, center, inverse
+
+# Assessing agreement
+
+---
+
+# Eyeball the data
+
+.pull-left[
+- Plot:
+  - each method against the other
+  - the line of equality (the line withe slope 1, passing through the origin)
+- Do the observations lie approximately along the line of equality?
+- Are there any obvious systematic differences?
+]
+
+.pull-right[ 
+```{r, fig.width = 4, fig.height = 4}
+ggplot(pefr_wide, aes(Wright1, Mini1)) +
+  geom_point(shape = "circle open", size = 3) +
+  scale_x_continuous(limits = c(0, 800)) +
+  scale_y_continuous(limits = c(0, 800)) +
+  geom_abline(slope = 1) +
+  coord_equal() +
+  labs(x = "PEFR by large meter (L/min)",
+       y = "PEFR by mini meter (L/min)")
+```
+PEFR: Peak expiratory flow rate, a measure of lung function.
+
+]
+
+---
+
+# References
+
+```{r results="asis"}
+PrintBibliography(bib)
+```
+

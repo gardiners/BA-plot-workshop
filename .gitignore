@@ -3,4 +3,7 @@
 .Rdata
 .httr-oauth
 .DS_Store
-Bland1986 - Statistical Methods for Assessing Agreement between Two Methods of Clinical Measurement.pdf
+*.pdf
+libs/
+presentation_files/
+*.html
