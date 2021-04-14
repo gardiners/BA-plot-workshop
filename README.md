@@ -3,7 +3,7 @@
 ## Bland-Altman methods for assessing agreement of clinical measurements
 
 <!-- badges: start -->
-
+[![DOI](https://zenodo.org/badge/344369118.svg)](https://zenodo.org/badge/latestdoi/344369118)
 <!-- badges: end -->
 
 This workshop was presented to the Cell & Molecular Therapies journal club at Royal Prince Alfred Hospital on 14 April 2021. The presentation slides are best viewed at <https://gardiners.github.io/BA-plot-workshop/>.
