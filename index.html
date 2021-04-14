@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Workshop: Limits of Agreement</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Sam Gardiner" />
+    <meta name="date" content="2021-04-14" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="tweaks.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Workshop: Limits of Agreement
+## Bland-Altman methods for assessing agreement of clinical measurements
+### Sam Gardiner
+### Cell &amp; Molecular Therapies, Royal Prince Alfred Hospital
+### 14 April 2021
+
+---
+
+
+
+
+
+
+
+# The _Limits of Agreement_ method
+
+Bland, J. M. and D. G. Altman (1986). "Statistical methods for assessing
+agreement between two methods of clinical measurement". In: _The Lancet_
+327.8476, pp. 307-310. DOI:
+[10.1016/s0140-6736(86)90837-8](https://doi.org/10.1016%2Fs0140-6736%2886%2990837-8).
+
+- The 29th most-cited paper of all time! (Noorden, Maher, and Nuzzo, 2014)
+- Still the gold standard for measuring agreement between continuous clinical measurements.
+- Simple enough to do by hand (in Excel) if needed, but also available in almost all statistical software: R, GraphPad Prism, SAS etc.
+
+---
+class: middle, center, inverse
+
+# Agreement
+
+---
+
+# Agreement
+
+- It is often useful to compare two methods of measuring some clinical parameter. For example:
+  - One-stage vs. chromogenic FIX activity 
+  - Axillary vs tympanic temperature 
+  - NucleoCounter vs CELL-DYN cell counts
+- If the two methods "agree" (within clinically meaningful limits), you might be able to retire the more expensive, more laborious or otherwise less convenient method.
+
+---
+
+# Not agreement
+
+## Correlation
+
+- What about `\(r\)`, the standard (Pearson product-moment) correlation coefficient? 
+--
+
+  - `\(r\)` measures linear correlation between two variables, not agreement.
+  - Two measurement methods can be perfectly linearly correlated, but not agree.
+  - Being correlated just means that two variables tend to go up or down together.
+  - Correlation `\(r\)` is a function of the variability of the data: two variables that cover a wide range will have larger `\(r\)` than similar variables which cover a small range, even if the degree of agreement is the same.
+
+---
+class: middle
+
+# Not agreement
+
+## Perfectly correlated, but not in agreement
+
+&lt;img src="index_files/figure-html/unnamed-chunk-2-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Not agreement
+
+## Perfectly correlated, but not in agreement
+
+&lt;img src="index_files/figure-html/unnamed-chunk-3-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Not agreement
+
+## Even worse:
+
+&lt;img src="index_files/figure-html/unnamed-chunk-4-1.svg" style="display: block; margin: auto;" /&gt;
+
+Data: Anscombe (1973)
+
+---
+
+# Not agreement
+
+## Calibration
+
+- Is measuring agreement the same as calibration?
+--
+
+  - Generally, **no**.
+  - Calibration compares a single method against a ground truth. 
+  - Agreement compares two imperfect methods (which are assumed to have measurement error) with each other.
+  - If the "ground truth" isn't particularly precise, agreement and calibration may be the same concept.
+
+---
+
+# Not quite agreement
+
+## Repeatability
+
+- Repeatability is a closely-related concept: if a measurement method agrees with itself over repeated measurements, it is _repeatable_.
+- The Bland-Altman _Limits of Agreement_ methods work well for assessing repeatability, as well.
+
+---
+class: middle, center, inverse
+
+# Assessing agreement
+
+---
+
+# Eyeball the data
+
+.pull-left[
+- Plot:
+  - each method against the other
+  - the line of equality (the line with slope 1, passing through the origin)
+- Do the observations lie approximately along the line of equality?
+- Are there any obvious systematic differences?
+]
+
+.pull-right[ 
+&lt;img src="index_files/figure-html/unnamed-chunk-5-1.svg" style="display: block; margin: auto;" /&gt;
+
+PEFR: Peak expiratory flow rate, a measure of lung function.
+]
+
+---
+
+# The _Limits of Agreement_ method
+
+
+0. Decide on a clinically acceptable threshold of agreement. Use clinical reasoning or published evidence. For example, you might consider methods in agreement if they are within
+  - 5mmHg for blood pressure
+  - 0.1 for blood pH
+  - 5% clotting activity for a FIX assay
+0. Visualise the magnitude of the measurements against the difference of the two methods.
+  - magnitude: estimate with the mean of the two methods
+  - difference: subtract one method from the other
+0. Find the bias and its standard deviation. The bias is the average differences between methods.
+0. Find the limits of agreement:
+  - `\(\text{Limits} = \text{Bias} \pm \text{SD(Bias)} \times 1.96\)`
+0. Critically appraise: 
+  - are there systematic differences between the methods?
+  - is the scale of the difference the same over the range of the measurements?
+  - are the 95% limits of agreement within the predefined clinically meaningful threshold?
+
+---
+
+# Why 1.96?
+
+&lt;img src="index_files/figure-html/unnamed-chunk-6-1.svg" style="display: block; margin: auto;" /&gt;
+
+
+---
+
+# Anatomy of a Bland-Altman plot
+
+.pull-left[
+
+| Subject| Large meter| Mini meter|
+|-------:|-----------:|----------:|
+|       1|         494|        512|
+|       2|         395|        430|
+|       3|         516|        520|
+|       4|         434|        428|
+|       5|         476|        500|
+|       6|         557|        600|
+|       7|         413|        364|
+|       8|         442|        380|
+|       9|         650|        658|
+|      10|         433|        445|
+]
+
+.pull-right[
+## Example dataset:
+Comparison of **p**eak **e**xpiratory **f**low **r**ate (PEFR in L/minute) by a large Wright peak flow meter and a mini Wright meter, measure in the same subject. Bland and Altman (1986).
+]
+
+---
+
+# Anatomy of a Bland-Altman plot
+
+&lt;img src="index_files/figure-html/unnamed-chunk-8-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+# Anatomy of a Bland-Altman plot
+
+&lt;img src="index_files/figure-html/unnamed-chunk-9-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Anatomy of a Bland-Altman plot
+
+&lt;img src="index_files/figure-html/unnamed-chunk-10-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Anatomy of a Bland-Altman plot
+
+&lt;img src="index_files/figure-html/unnamed-chunk-11-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+# Anatomy of a Bland-Altman plot
+
+&lt;img src="index_files/figure-html/unnamed-chunk-12-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+# Anatomy of a Bland-Altman plot
+
+&lt;img src="index_files/figure-html/unnamed-chunk-13-1.svg" style="display: block; margin: auto;" /&gt;
+---
+
+# Assessing agreement
+
+## Assumptions
+
+The PEFR example relies on some assumptions about the data:
+- That there is no systematic change to the degree of agreement over the range of the measurements.
+- That the measurement error (the difference between the two measurements) is normally distributed.
+  - The limits of agreement and confidence intervals rely on this assumption to be accurate, but should be OK with other distributions as long as the sample size isn't tiny.
+
+---
+
+# Assessing agreement
+
+## What if there _is_ a systematic difference?
+
+Bland and Altman suggest two remedies:
+
+- Working with percentage difference instead of absolute difference
+- Log-transforming your data.
+
+---
+
+# Systematic difference
+
+.pull-left[
+- Paired plasma samples from the SPK-9001-101 participants were measured by a chromogenic FIX activity assay at the trial central laboratory, and by a one-stage assay at each site's local laboratory.
+- `\(n=15\)` participants with `\(147\)` measurements.
+]
+
+.pull-right[
+
+&lt;img src="index_files/figure-html/unnamed-chunk-14-1.svg" style="display: block; margin: auto;" /&gt;
+.center[Robinson, George, Carr, et al. (2021)]]
+
+---
+
+# Systematic difference
+
+&lt;img src="index_files/figure-html/unnamed-chunk-15-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Systematic difference
+
+## Plotting the absolute difference would be a mistake
+
+&lt;img src="index_files/figure-html/unnamed-chunk-16-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Systematic difference
+
+## Plotting the absolute difference would be a mistake
+
+&lt;img src="index_files/figure-html/unnamed-chunk-17-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Systematic difference
+
+## Plot the percentage or ratio difference, instead
+
+&lt;img src="index_files/figure-html/unnamed-chunk-18-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# More to learn...
+
+- Repeated measures versions where each method is used to measure a sample or individual multiple times.
+  - Paired or unpaired? 
+  - Constant underlying true value, or time-dependent? (Bland and Altman, 2007)
+- Applications to transcriptomics (gene expression) data: the MA plot (Dudoit, Yang, Callow, et al., 2002).
+
+---
+
+# References and further reading
+
+Anscombe, F. J. (1973). "Graphs in Statistical Analysis". In: _The American
+Statistician_ 27.1, pp. 17-21. DOI:
+[10.1080/00031305.1973.10478966](https://doi.org/10.1080%2F00031305.1973.10478966).
+
+Bland, J. M. and D. G. Altman (1986). "Statistical methods for assessing
+agreement between two methods of clinical measurement". In: _The Lancet_
+327.8476, pp. 307-310. DOI:
+[10.1016/s0140-6736(86)90837-8](https://doi.org/10.1016%2Fs0140-6736%2886%2990837-8).
+
+Bland, J. M. and D. G. Altman (2007). "Agreement Between Methods of
+Measurement with Multiple Observations Per Individual". In: _Journal of
+Biopharmaceutical Statistics_ 17.4, pp. 571-582. DOI:
+[10.1080/10543400701329422](https://doi.org/10.1080%2F10543400701329422).
+
+Dudoit, S., Y. H. Yang, M. J. Callow, et al. (2002). "Statistical methods for
+identifying differentially expressed genes in replicated cDNA microarray
+experiments". In: _Statistica Sinica_ 12, pp. 111-139.
+
+Noorden, R. V., B. Maher, and R. Nuzzo (2014). "The top 100 papers". In:
+_Nature_ 514.7524, pp. 550-553. DOI:
+[10.1038/514550a](https://doi.org/10.1038%2F514550a).
+---
+
+# References and further reading
+
+Robinson, M. M., L. A. George, M. E. Carr, et al. (2021). "Factor IX assay
+discrepancies in the setting of liver gene therapy using a hyperfunctional
+variant factor IX-Padua". In: _Journal of Thrombosis and Haemostasis_. DOI:
+[10.1111/jth.15281](https://doi.org/10.1111%2Fjth.15281).
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

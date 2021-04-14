@@ -4,8 +4,5 @@
 .httr-oauth
 .DS_Store
 *.pdf
-libs/
-presentation_files/
-*.html
 *.bak
 *.sav
