@@ -92,4 +92,26 @@
   year      = {1973},
 }
 
+@Article{Noorden2014,
+  author    = {Richard Van Noorden and Brendan Maher and Regina Nuzzo},
+  title     = {The top 100 papers},
+  doi       = {10.1038/514550a},
+  number    = {7524},
+  pages     = {550--553},
+  volume    = {514},
+  journal   = {Nature},
+  month     = {oct},
+  publisher = {Springer Science and Business Media {LLC}},
+  year      = {2014},
+}
+
+@Article{Dudoit2002,
+  author  = {Sandrine Dudoit and Yee Hwa Yang and Matthew J. Callow and Terence P. Speed},
+  title   = {Statistical methods for identifying differentially expressed genes in replicated cDNA microarray experiments},
+  pages   = {111--139},
+  volume  = {12},
+  journal = {Statistica Sinica},
+  year    = {2002},
+}
+
 @Comment{jabref-meta: databaseType:biblatex;}
