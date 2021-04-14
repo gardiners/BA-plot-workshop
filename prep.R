@@ -1,4 +1,4 @@
-# Data prep and exploratory graphics for CMT JC 2021-03-10
+# Data prep for CMT JC 2021-03-10
 # S Gardiner 2021-03-01
 
 library(tidyverse)
@@ -34,15 +34,3 @@ sealey <- read_table(file = "data/sealey.dct",
                                    "Pulse oximeter",
                                    "Saturation monitor"))
 write_csv(sealey, "data/sealey.csv")
-
-
-# 
-# pefr_ba <- pefr_wide %>%
-#   transmute(average = Wright1 + Mini1 / 2,
-#             difference = Wright1 - Mini1)
-# 
-# pefr_anno <- tibble(
-#   value = mean(pefr_ba$difference),
-#   annotation = "Mean"
-# )
-#   
