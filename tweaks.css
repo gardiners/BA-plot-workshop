@@ -1,0 +1,17 @@
+.remark-slide-content {
+  background-color: #ffffff;
+}
+
+.title-slide .inverse .remark-slide-content {
+  background-color: #ffffff;
+}
+
+.inverse {
+  background-color: #23373B;
+  text-shadow: none;
+}
+
+.title-slide {
+  background-color: #FAFAFA;
+  border-top: 80px solid #FAFAFA;
+}
