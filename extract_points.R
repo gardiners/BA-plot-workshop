@@ -1,12 +1,12 @@
 # Extract point data from an SVG plot. The SVG itself is a figure from
-# @Robinson2021, exctracted from the PDF and cleaned by hand to ease parsing.
+# @Robinson2021, extracted from the PDF and cleaned by hand to ease parsing.
 # SG 2021-04-12
 
 library(tidyverse)
 library(xml2)
 
 # Read SVG
-raw_data <- read_xml("FIX_clean_scaled.svg") %>%
+raw_data <- read_xml("data/FIX_clean_scaled.svg") %>%
   xml_ns_strip()
 
 # Extract point nodes
@@ -37,7 +37,7 @@ points_unscaled <- tibble(d = d, style_data) %>%
 
 width <- function(x) max(x) - min(x)
 
-true_x <- c(5, 60)
+true_x <- c(5, 60) # Eyeballed these.
 true_y <- c(8, 88)
 
 scale_x <- width(true_x) / width(points_unscaled$x)
